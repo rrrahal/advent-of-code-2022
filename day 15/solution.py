@@ -51,6 +51,42 @@ class Point:
   def y(self):
     return self.y
 
+  def get_fronteirs(self, distance, max_value):
+    top_point = Point(self.x, self.y + distance + 1)
+    points = [top_point]
+    p = top_point
+    while(p.y >= self.y):
+      p = p + Point(1, -1)
+      if (p.x > 0 and p.x <= max_value):
+        if (p.y > 0 and p.y <= max_value):
+          points.append(p)
+
+    p = top_point
+    while(p.y >= self.y):
+      p = p + Point(-1, -1)
+      if (p.x > 0 and p.x <= max_value):
+        if (p.y > 0 and p.y <= max_value):
+          points.append(p)
+
+    bottom_point = Point(self.x, self.y - distance - 1)
+    points.append(bottom_point)
+    p = bottom_point
+
+    while(p.y <= self.y):
+      p = p + Point(1, 1)
+      if (p.x > 0 and p.x <= max_value):
+        if (p.y > 0 and p.y <= max_value):
+          points.append(p)
+
+    p = bottom_point
+
+    while(p.y <= self.y):
+      p = p + Point(-1, 1)
+      if (p.x > 0 and p.x <= max_value):
+        if (p.y > 0 and p.y <= max_value):
+          points.append(p)
+    return points
+
 def get_point(string):
   x = int(string.split(",")[0].split("=")[1])
   y = int(string.split(",")[1].split("=")[1])
@@ -86,24 +122,39 @@ def solution1(input, column):
 
 ## Problem 2
 
+def inside_sensors(sensors, point, max_value):
+  if point.x > max_value or point.y > max_value:
+    return True
+  if point.x < 0 or point.y < 0:
+    return True
+  for sensor in sensors:
+    if sensor.distance(point) <= sensors[sensor]:
+      return True
+  return False
+
+
 def solution2(input, max_value):
-  impossible_points = set()
+  sensors = {}
   beacons = set()
-  covered_y = []
+  fronteirs = []
+  i = 0
   for line in input:
+    i += 1
+    print("starting sensor", i, "of ", len(input))
     sensor, beacon = get_points(line)
     distance = sensor.distance(beacon)
+    sensors[sensor] = distance
     beacons.add(str(beacon))
-    for y in range(sensor.y - distance, sensor.y + distance + 1):
-      covered_y.append(y)
-  min_y = min(covered_y)
-  max_y = max(covered_y)
-  possible_y = []
-  for y in range(min_y, max_y):
-    if y not in covered_y:
-      possible_y.append(y)
-  print(possible_y)
+    fronteirs.append(sensor.get_fronteirs(distance, max_value))
 
+  i = 0
+  for fronteir in fronteirs:
+    i += 1
+    print("starting fronteir", i, "of ", len(fronteirs))
+    for point in fronteir:
+      if (not inside_sensors(sensors, point, max_value)):
+        return (point.x * 4000000) + point.y
+  return None
 
-print("Example 2 ->", solution2(example, 20))
+#print("Example 2 ->", solution2(example, 20))
 print("Solution 2:", solution2(real_input, 4000000))
